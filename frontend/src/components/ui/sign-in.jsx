@@ -55,10 +55,8 @@ export const SignInPage = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
-  const [googleScriptReady, setGoogleScriptReady] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const googleBtnRef = useRef(null);
-  const googleInitializedRef = useRef(false);
+  const tokenClientRef = useRef(null);
   const onGoogleSignInRef = useRef(onGoogleSignIn);
 
   useEffect(() => {
@@ -66,75 +64,46 @@ export const SignInPage = ({
   }, [onGoogleSignIn]);
 
   useEffect(() => {
-    if (!googleClientId || !googleBtnRef.current) return;
+    if (!googleClientId) return undefined;
 
-    if (!window.google?.accounts?.id) {
-      const waitForGoogle = setInterval(() => {
-        if (window.google?.accounts?.id) {
-          setGoogleScriptReady(true);
-          clearInterval(waitForGoogle);
-        }
-      }, 100);
+    let mounted = true;
 
-      return () => clearInterval(waitForGoogle);
-    }
+    const initializeGoogleOAuth = () => {
+      if (!window.google?.accounts?.oauth2) return false;
 
-    setGoogleScriptReady(true);
-
-    const parseJwt = (token) => {
-      try {
-        const payload = token?.split('.')?.[1];
-        if (!payload) return null;
-
-        let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-        const pad = base64.length % 4;
-        if (pad) base64 += '='.repeat(4 - pad);
-
-        const binary = atob(base64);
-        const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-        const json = new TextDecoder().decode(bytes);
-        return JSON.parse(json);
-      } catch {
-        return null;
-      }
-    };
-
-    if (!googleInitializedRef.current) {
-      window.google.accounts.id.initialize({
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
         client_id: googleClientId,
+        scope: 'openid email profile',
+        prompt: 'select_account',
         callback: (response) => {
           setGoogleLoading(false);
-          const profile = parseJwt(response?.credential || '');
-          if (!profile?.email) {
-            console.error('Google credential parse failed', { response });
+
+          if (response?.error) {
+            console.error('Google OAuth failed', response);
             return;
           }
-          onGoogleSignInRef.current?.({
-            email: profile.email,
-            name: profile.name || profile.given_name || 'Google User',
-            picture: profile.picture || null,
-            credential: response.credential,
-          });
+
+          if (response?.access_token) {
+            onGoogleSignInRef.current?.({ accessToken: response.access_token });
+          }
         },
-        ux_mode: 'popup',
-        auto_select: false,
       });
-      googleInitializedRef.current = true;
-      setGoogleReady(true);
-    }
 
-    googleBtnRef.current.innerHTML = '';
-    const buttonWidth = googleBtnRef.current.offsetWidth || 380;
-    window.google.accounts.id.renderButton(googleBtnRef.current, {
-      theme: 'outline',
-      size: 'large',
-      type: 'standard',
-      text: 'continue_with',
-      shape: 'pill',
-      width: buttonWidth,
-    });
-  }, [googleClientId, googleScriptReady]);
+      if (mounted) setGoogleReady(true);
+      return true;
+    };
 
+    if (initializeGoogleOAuth()) return undefined;
+
+    const waitForGoogle = window.setInterval(() => {
+      if (initializeGoogleOAuth()) window.clearInterval(waitForGoogle);
+    }, 100);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(waitForGoogle);
+    };
+  }, [googleClientId]);
 
   const handleGoogleButtonClick = () => {
     setGoogleLoading(true);
@@ -145,9 +114,20 @@ export const SignInPage = ({
       return;
     }
 
-    window.setTimeout(() => {
+    if (!tokenClientRef.current) {
       setGoogleLoading(false);
-    }, 1800);
+      alert('Google sign-in is still loading. Please try again.');
+      return;
+    }
+
+    try {
+      tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+      window.setTimeout(() => setGoogleLoading(false), 2500);
+    } catch (error) {
+      console.error('Google popup could not be opened', error);
+      setGoogleLoading(false);
+      alert('Google sign-in popup could not be opened. Please allow popups and try again.');
+    }
   };
 
   return (
@@ -280,22 +260,16 @@ export const SignInPage = ({
               <span className="px-4 text-xs text-on-surface-variant/70 bg-surface-container-lowest absolute">Or continue with</span>
             </div>
 
-            <div className="animate-element animate-delay-800 w-full relative" onPointerDownCapture={handleGoogleButtonClick}>
+            <div className="animate-element animate-delay-800 w-full relative">
               <button
                 type="button"
                 onClick={handleGoogleButtonClick}
                 className="w-full flex items-center justify-center gap-3 border border-outline-variant/40 rounded-2xl py-4 hover:bg-white/5 transition-colors cursor-pointer text-sm font-semibold text-on-surface disabled:cursor-wait"
-                disabled={Boolean(googleClientId) && (!googleScriptReady || !googleReady)}
+                disabled={googleLoading || (Boolean(googleClientId) && !googleReady)}
               >
                 <GoogleIcon />
-                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && (!googleScriptReady || !googleReady) ? "Loading Google..." : "Continue with Google")}
+                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google")}
               </button>
-              {googleClientId && googleReady && (
-                <div
-                  ref={googleBtnRef}
-                  className="absolute inset-0 z-10 flex cursor-pointer items-center overflow-hidden opacity-[0.01]"
-                />
-              )}
             </div>
 
             <p className="animate-element animate-delay-900 text-center text-sm text-on-surface-variant/70">

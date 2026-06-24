@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { loginWithGoogleCredential } from "../services/auth.service.js";
+import { loginWithGoogleAccessToken, loginWithGoogleCredential } from "../services/auth.service.js";
 import { HttpError } from "../utils/http-error.js";
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../utils/jwt.js";
 import { getUserById, getOrCreateUserByEmail, updateUser } from "../services/store.js";
@@ -9,13 +9,18 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 const googleBodySchema = z.object({
-  credential: z.string().min(1)
+  credential: z.string().min(1).optional(),
+  accessToken: z.string().min(1).optional()
+}).refine((body) => body.credential || body.accessToken, {
+  message: "Google credential or access token is required"
 });
 
 router.post("/google", async (req, res, next) => {
   try {
     const body = googleBodySchema.parse(req.body);
-    const result = await loginWithGoogleCredential(body.credential);
+    const result = body.credential
+      ? await loginWithGoogleCredential(body.credential)
+      : await loginWithGoogleAccessToken(body.accessToken);
 
     res.json({
       ok: true,
@@ -104,3 +109,4 @@ router.patch("/me", requireAuth, async (req, res, next) => {
 });
 
 export default router;
+

@@ -62,15 +62,17 @@ const Login = ({ onLogin }) => {
     }
 
     const email = googleProfile?.email;
-    if (!email) {
-      alert("Google sign-in failed. No email was returned. Please check Google OAuth origin/redirect settings and try again.");
+    const hasGoogleToken = Boolean(googleProfile?.credential || googleProfile?.accessToken);
+    if (!email && !hasGoogleToken) {
+      alert("Google sign-in failed. No account information was returned. Please check Google OAuth settings and try again.");
       return;
     }
 
     const completeLogin = async () => {
-      if (apiBaseUrl && googleProfile?.credential) {
+      if (apiBaseUrl && (googleProfile?.credential || googleProfile?.accessToken)) {
         const response = await axios.post(`${apiBaseUrl}/auth/google`, {
           credential: googleProfile.credential,
+          accessToken: googleProfile.accessToken,
         });
 
         const payload = response?.data?.data;
@@ -147,3 +149,4 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
+

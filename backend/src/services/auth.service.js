@@ -1,3 +1,4 @@
+import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../config/env.js";
 import { HttpError } from "../utils/http-error.js";
@@ -47,3 +48,42 @@ export async function loginWithGoogleCredential(credential) {
     refreshToken
   };
 }
+export async function loginWithGoogleAccessToken(googleAccessToken) {
+  if (!googleAccessToken) {
+    throw new HttpError(400, "Google access token is required");
+  }
+
+  let profile;
+  try {
+    const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${googleAccessToken}` },
+      timeout: 10000,
+    });
+    profile = response.data;
+  } catch (error) {
+    throw new HttpError(401, "Invalid Google access token", {
+      provider: "google",
+      reason: error?.response?.data || error?.message || "userinfo lookup failed",
+    });
+  }
+
+  if (!profile?.email) {
+    throw new HttpError(401, "Unable to read Google account email");
+  }
+
+  const user = await getOrCreateUserByEmail({
+    email: profile.email,
+    name: profile.name || profile.given_name || profile.email,
+    picture: profile.picture || "",
+  });
+
+  const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user);
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+  };
+}
+
