@@ -132,7 +132,7 @@ export const SignInPage = ({
       shape: 'pill',
       width: buttonWidth,
     });
-  }, [googleClientId]);
+  }, [googleClientId, googleScriptReady]);
 
 
   const handleGoogleButtonClick = () => {
@@ -140,14 +140,17 @@ export const SignInPage = ({
 
     if (!googleClientId) {
       onGoogleSignIn?.();
+      window.setTimeout(() => setGoogleLoading(false), 1200);
       return;
     }
 
-    window.google?.accounts?.id?.prompt?.();
+    window.google?.accounts?.id?.prompt?.(() => {
+      setGoogleLoading(false);
+    });
 
     window.setTimeout(() => {
       setGoogleLoading(false);
-    }, 15000);
+    }, 1800);
   };
 
   return (
@@ -335,21 +338,4 @@ export const SignInPage = ({
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
