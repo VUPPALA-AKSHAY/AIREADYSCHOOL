@@ -54,7 +54,7 @@ export const SignInPage = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);`r`n  const [googleLoading, setGoogleLoading] = useState(false);
   const googleBtnRef = useRef(null);
   const googleInitializedRef = useRef(false);
   const onGoogleSignInRef = useRef(onGoogleSignIn);
@@ -273,7 +273,7 @@ export const SignInPage = ({
                 disabled={Boolean(googleClientId) && !googleReady}
               >
                 <GoogleIcon />
-                {Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google"}
+                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google")}
               </button>
               {googleClientId && (
                 <div
@@ -320,6 +320,7 @@ export const SignInPage = ({
     </div>
   );
 };
+
 
 
 
