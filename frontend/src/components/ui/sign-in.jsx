@@ -54,7 +54,9 @@ export const SignInPage = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);`r`n  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleScriptReady, setGoogleScriptReady] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const googleBtnRef = useRef(null);
   const googleInitializedRef = useRef(false);
   const onGoogleSignInRef = useRef(onGoogleSignIn);
@@ -64,7 +66,20 @@ export const SignInPage = ({
   }, [onGoogleSignIn]);
 
   useEffect(() => {
-    if (!googleClientId || !window.google?.accounts?.id || !googleBtnRef.current) return;
+    if (!googleClientId || !googleBtnRef.current) return;
+
+    if (!window.google?.accounts?.id) {
+      const waitForGoogle = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          setGoogleScriptReady(true);
+          clearInterval(waitForGoogle);
+        }
+      }, 100);
+
+      return () => clearInterval(waitForGoogle);
+    }
+
+    setGoogleScriptReady(true);
 
     const parseJwt = (token) => {
       try {
@@ -270,10 +285,10 @@ export const SignInPage = ({
                 type="button"
                 onClick={handleGoogleButtonClick}
                 className="w-full flex items-center justify-center gap-3 border border-outline-variant/40 rounded-2xl py-4 hover:bg-white/5 transition-colors cursor-pointer text-sm font-semibold text-on-surface disabled:cursor-wait"
-                disabled={Boolean(googleClientId) && !googleReady}
+                disabled={Boolean(googleClientId) && (!googleScriptReady || !googleReady)}
               >
                 <GoogleIcon />
-                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google")}
+                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && (!googleScriptReady || !googleReady) ? "Loading Google..." : "Continue with Google")}
               </button>
               {googleClientId && (
                 <div
@@ -320,6 +335,10 @@ export const SignInPage = ({
     </div>
   );
 };
+
+
+
+
 
 
 
