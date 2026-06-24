@@ -466,13 +466,20 @@ const Chat = () => {
       const loadPreviewBlob = async () => {
         try {
           let blob;
+          let recoveredFromText = false;
 
           if (activePreviewFile.rawUrl) {
-            const response = await api.get(activePreviewFile.rawUrl, { responseType: 'blob' });
-            blob = response.data;
-            if (!cancelled) {
-              setPreviewRecoveredFromText(response.headers?.['x-chatb-recovered-preview'] === 'metadata-text');
-            }
+            // Use fetch with redirect: 'follow' so the backend 302 → Supabase signed URL works seamlessly
+            const token = localStorage.getItem('accessToken');
+            const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+            const fullRawUrl = `${apiBase}${activePreviewFile.rawUrl}`;
+            const response = await fetch(fullRawUrl, {
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              redirect: 'follow',
+            });
+            if (!response.ok) throw new Error(`Preview fetch failed: ${response.status}`);
+            recoveredFromText = response.headers.get('x-chatb-recovered-preview') === 'metadata-text';
+            blob = await response.blob();
           } else {
             const response = await fetch(getFullUrl(activePreviewFile.url));
             if (!response.ok) throw new Error('Network response was not ok');
@@ -483,8 +490,12 @@ const Chat = () => {
             throw new Error('Preview file was empty');
           }
 
+          // Guard: reject extracted-text fallbacks for non-text files,
+          // but allow large blobs through even if content-type is misreported
           const loadedContentType = blob.type || '';
-          if (loadedContentType.startsWith('text/plain') && activePreviewFile.type !== 'txt') {
+          const looksLikeTextFallback = loadedContentType.startsWith('text/plain') && blob.size < 1024 * 1024;
+          if (recoveredFromText || (looksLikeTextFallback && activePreviewFile.type !== 'txt')) {
+            if (!cancelled) setPreviewRecoveredFromText(true);
             throw new Error('Original preview resolved to extracted text instead of the stored file.');
           }
 

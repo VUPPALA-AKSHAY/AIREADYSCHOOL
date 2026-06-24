@@ -315,7 +315,8 @@ const Layout = ({ children }) => {
         {children}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 border-t border-[#2a2a2d] bg-[#151517]/95 px-4 pb-safe-bottom backdrop-blur-md md:hidden items-center justify-around">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#2a2a2d] bg-[#151517] backdrop-blur-md md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="flex h-16 items-center justify-around px-4">
         {navItems.map((item) => {
           const isActive =
             item.path === '/'
@@ -335,6 +336,7 @@ const Layout = ({ children }) => {
             </NavLink>
           );
         })}
+        </div>
       </nav>
     </div>
   );

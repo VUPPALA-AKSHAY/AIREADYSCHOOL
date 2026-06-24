@@ -609,14 +609,16 @@ router.get("/workspaces/:workspaceId/files/:fileId/raw", async (req, res, next) 
       }
     }
 
+    // --- Supabase Storage: redirect directly to a fresh signed URL ---
     const metadataPath = file.metadata?.storageObjectPath || "";
-    const generatedSignedUrl = metadataPath ? await getSignedUrlForObjectPath(metadataPath) : "";
-    if (generatedSignedUrl) {
-      file.metadata = {
-        ...(file.metadata || {}),
-        remoteUrl: generatedSignedUrl
-      };
+    if (metadataPath) {
+      const freshSignedUrl = await getSignedUrlForObjectPath(metadataPath);
+      if (freshSignedUrl) {
+        return res.redirect(freshSignedUrl);
+      }
     }
+
+    // --- Fallback: try restore from any stored remote URL (e.g. metadata.remoteUrl, metadata.originalUrl) ---
 
     const restored = await restoreRemoteFileCopy({
       userId: req.user.id,
