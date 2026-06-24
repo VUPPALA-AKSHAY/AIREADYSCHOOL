@@ -103,6 +103,7 @@ export const SignInPage = ({
       window.google.accounts.id.initialize({
         client_id: googleClientId,
         callback: (response) => {
+          setGoogleLoading(false);
           const profile = parseJwt(response?.credential || '');
           if (!profile?.email) {
             console.error('Google credential parse failed', { response });
@@ -143,10 +144,6 @@ export const SignInPage = ({
       window.setTimeout(() => setGoogleLoading(false), 1200);
       return;
     }
-
-    window.google?.accounts?.id?.prompt?.(() => {
-      setGoogleLoading(false);
-    });
 
     window.setTimeout(() => {
       setGoogleLoading(false);
@@ -283,20 +280,20 @@ export const SignInPage = ({
               <span className="px-4 text-xs text-on-surface-variant/70 bg-surface-container-lowest absolute">Or continue with</span>
             </div>
 
-            <div className="animate-element animate-delay-800 w-full relative">
+            <div className="animate-element animate-delay-800 w-full relative" onPointerDownCapture={handleGoogleButtonClick}>
               <button
                 type="button"
                 onClick={handleGoogleButtonClick}
                 className="w-full flex items-center justify-center gap-3 border border-outline-variant/40 rounded-2xl py-4 hover:bg-white/5 transition-colors cursor-pointer text-sm font-semibold text-on-surface disabled:cursor-wait"
-                disabled={googleLoading || (Boolean(googleClientId) && (!googleScriptReady || !googleReady))}
+                disabled={Boolean(googleClientId) && (!googleScriptReady || !googleReady)}
               >
                 <GoogleIcon />
                 {googleLoading ? "Please wait..." : (Boolean(googleClientId) && (!googleScriptReady || !googleReady) ? "Loading Google..." : "Continue with Google")}
               </button>
-              {googleClientId && (
+              {googleClientId && googleReady && (
                 <div
                   ref={googleBtnRef}
-                  className="absolute inset-0 opacity-0 overflow-hidden pointer-events-none"
+                  className="absolute inset-0 z-10 flex cursor-pointer items-center overflow-hidden opacity-[0.01]"
                 />
               )}
             </div>
