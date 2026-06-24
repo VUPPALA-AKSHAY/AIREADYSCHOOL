@@ -136,18 +136,18 @@ export const SignInPage = ({
 
 
   const handleGoogleButtonClick = () => {
+    setGoogleLoading(true);
+
     if (!googleClientId) {
       onGoogleSignIn?.();
       return;
     }
 
-    const clickable = googleBtnRef.current?.querySelector("div[role='button'], button");
-    if (clickable) {
-      clickable.click();
-      return;
-    }
-
     window.google?.accounts?.id?.prompt?.();
+
+    window.setTimeout(() => {
+      setGoogleLoading(false);
+    }, 15000);
   };
 
   return (
@@ -285,7 +285,7 @@ export const SignInPage = ({
                 type="button"
                 onClick={handleGoogleButtonClick}
                 className="w-full flex items-center justify-center gap-3 border border-outline-variant/40 rounded-2xl py-4 hover:bg-white/5 transition-colors cursor-pointer text-sm font-semibold text-on-surface disabled:cursor-wait"
-                disabled={Boolean(googleClientId) && (!googleScriptReady || !googleReady)}
+                disabled={googleLoading || (Boolean(googleClientId) && (!googleScriptReady || !googleReady))}
               >
                 <GoogleIcon />
                 {googleLoading ? "Please wait..." : (Boolean(googleClientId) && (!googleScriptReady || !googleReady) ? "Loading Google..." : "Continue with Google")}
@@ -335,6 +335,9 @@ export const SignInPage = ({
     </div>
   );
 };
+
+
+
 
 
 
