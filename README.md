@@ -166,6 +166,6 @@ By default, all necessary platform APIs are already integrated.
 - Kaggle API for dataset search and import
 - Gemini for model or embedding workflows
 - Cerebras / GLM model endpoint for chat answers
-- Supabase for storage or database workflows, depending on configuration
+- Supabase for storage
 
 
