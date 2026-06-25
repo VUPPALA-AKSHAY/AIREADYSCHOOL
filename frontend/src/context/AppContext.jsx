@@ -1003,6 +1003,8 @@ export const AppProvider = ({ children }) => {
       }
     }
 
+    sessionStorage.setItem('chatbShowAuthLoader', 'true');
+
     const nextUser = {
       email,
       name: payload.name || email.split('@')[0],
@@ -1018,6 +1020,7 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('authUser');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('chatbShowAuthLoader');
 
     if (HAS_BACKEND_API) {
       setProjects([]);

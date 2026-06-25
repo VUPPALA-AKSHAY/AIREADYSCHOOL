@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import Layout from './components/Layout';
@@ -38,8 +38,26 @@ const AuthLoadingScreen = () => (
 
 function AppContent() {
   const { user, login, isWorkspaceLoading } = useApp();
+  const [showAuthLoader, setShowAuthLoader] = useState(() => sessionStorage.getItem('chatbShowAuthLoader') === 'true');
 
-  if (user && isWorkspaceLoading) {
+  useEffect(() => {
+    if (!user) {
+      setShowAuthLoader(false);
+      sessionStorage.removeItem('chatbShowAuthLoader');
+      return;
+    }
+
+    if (sessionStorage.getItem('chatbShowAuthLoader') === 'true') {
+      setShowAuthLoader(true);
+    }
+
+    if (!isWorkspaceLoading) {
+      setShowAuthLoader(false);
+      sessionStorage.removeItem('chatbShowAuthLoader');
+    }
+  }, [user, isWorkspaceLoading]);
+
+  if (user && isWorkspaceLoading && showAuthLoader) {
     return <AuthLoadingScreen />;
   }
 
