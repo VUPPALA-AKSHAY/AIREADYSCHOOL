@@ -17,17 +17,20 @@ const PageFallback = () => (
 );
 
 const AuthLoadingScreen = () => (
-  <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest px-6">
-    <div className="w-full max-w-md rounded-3xl border border-outline-variant/40 bg-surface/80 p-8 shadow-xl backdrop-blur-xl">
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Signing you in</p>
-          <p className="mt-1 text-sm text-on-surface-variant">Preparing your dashboard and workspace data.</p>
-        </div>
+  <div className="auth-loading-screen">
+    <div className="auth-loading-orb auth-loading-orb-left" />
+    <div className="auth-loading-orb auth-loading-orb-right" />
+
+    <div className="auth-loading-card">
+      <div className="auth-loading-icon" aria-hidden="true">
+        <div className="auth-loading-spinner" />
       </div>
-      <div className="mt-6 h-2 overflow-hidden rounded-full bg-outline-variant/30">
-        <div className="h-full w-1/2 rounded-full bg-primary/80 animate-pulse" />
+      <div className="min-w-0">
+        <p className="auth-loading-kicker">Signing you in</p>
+        <p className="auth-loading-copy">Preparing your dashboard and workspace data.</p>
+      </div>
+      <div className="auth-loading-bar" aria-hidden="true">
+        <div className="auth-loading-bar-fill" />
       </div>
     </div>
   </div>
