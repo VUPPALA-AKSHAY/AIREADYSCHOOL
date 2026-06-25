@@ -16,8 +16,29 @@ const PageFallback = () => (
   </div>
 );
 
+const AuthLoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest px-6">
+    <div className="w-full max-w-md rounded-3xl border border-outline-variant/40 bg-surface/80 p-8 shadow-xl backdrop-blur-xl">
+      <div className="flex items-center gap-4">
+        <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Signing you in</p>
+          <p className="mt-1 text-sm text-on-surface-variant">Preparing your dashboard and workspace data.</p>
+        </div>
+      </div>
+      <div className="mt-6 h-2 overflow-hidden rounded-full bg-outline-variant/30">
+        <div className="h-full w-1/2 rounded-full bg-primary/80 animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
 function AppContent() {
-  const { user, login } = useApp();
+  const { user, login, isWorkspaceLoading } = useApp();
+
+  if (user && isWorkspaceLoading) {
+    return <AuthLoadingScreen />;
+  }
 
   return (
     <Suspense fallback={<PageFallback />}>

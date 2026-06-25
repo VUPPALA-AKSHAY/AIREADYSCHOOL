@@ -21,6 +21,7 @@ const sampleTestimonials = [
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
   const [isCreateMode, setIsCreateMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
@@ -29,6 +30,7 @@ const Login = ({ onLogin }) => {
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email");
 
+    setIsSubmitting(true);
     try {
       if (onLogin) {
         await onLogin({ email });
@@ -36,6 +38,8 @@ const Login = ({ onLogin }) => {
       navigate('/');
     } catch {
       alert("Sign-in failed. Check backend availability and credentials.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -69,6 +73,7 @@ const Login = ({ onLogin }) => {
     }
 
     const completeLogin = async () => {
+      setIsSubmitting(true);
       if (apiBaseUrl && (googleProfile?.credential || googleProfile?.accessToken)) {
         const response = await axios.post(`${apiBaseUrl}/auth/google`, {
           credential: googleProfile.credential,
@@ -109,6 +114,8 @@ const Login = ({ onLogin }) => {
         message: error?.message,
       });
       alert("Google sign-in failed while contacting backend. Check VITE_API_BASE_URL and backend /api/auth/google.");
+    }).finally(() => {
+      setIsSubmitting(false);
     });
   };
 
@@ -142,6 +149,7 @@ const Login = ({ onLogin }) => {
         googleClientId={googleClientId}
         onResetPassword={handleResetPassword}
         isCreateMode={isCreateMode}
+        isLoading={isSubmitting}
         onToggleMode={() => setIsCreateMode(!isCreateMode)}
       />
     </div>

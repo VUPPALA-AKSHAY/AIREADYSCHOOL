@@ -51,6 +51,7 @@ export const SignInPage = ({
   isCreateMode = false,
   onToggleMode,
   googleClientId,
+  isLoading = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -181,8 +182,8 @@ export const SignInPage = ({
                   <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-primary/80 hover:text-primary transition-colors">Reset password</a>
                 </div>
 
-                <button type="submit" className="animate-element animate-delay-600 w-full rounded-2xl bg-primary text-black py-4 font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer text-sm">
-                  Sign In
+                <button type="submit" disabled={isLoading} className="animate-element animate-delay-600 w-full rounded-2xl bg-primary text-black py-4 font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer text-sm disabled:opacity-70 disabled:cursor-wait">
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </button>
               </form>
             ) : (
@@ -249,8 +250,8 @@ export const SignInPage = ({
                   </GlassInputWrapper>
                 </div>
 
-                <button type="submit" className="animate-element animate-delay-600 w-full rounded-2xl bg-primary text-black py-4 font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer text-sm">
-                  Create Account
+                <button type="submit" disabled={isLoading} className="animate-element animate-delay-600 w-full rounded-2xl bg-primary text-black py-4 font-semibold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer text-sm disabled:opacity-70 disabled:cursor-wait">
+                  {isLoading ? "Creating..." : "Create Account"}
                 </button>
               </form>
             )}
@@ -265,10 +266,10 @@ export const SignInPage = ({
                 type="button"
                 onClick={handleGoogleButtonClick}
                 className="w-full flex items-center justify-center gap-3 border border-outline-variant/40 rounded-2xl py-4 hover:bg-white/5 transition-colors cursor-pointer text-sm font-semibold text-on-surface disabled:cursor-wait"
-                disabled={googleLoading || (Boolean(googleClientId) && !googleReady)}
+                disabled={isLoading || googleLoading || (Boolean(googleClientId) && !googleReady)}
               >
                 <GoogleIcon />
-                {googleLoading ? "Please wait..." : (Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google")}
+                {isLoading ? "Signing in..." : (googleLoading ? "Please wait..." : (Boolean(googleClientId) && !googleReady ? "Loading Google..." : "Continue with Google"))}
               </button>
             </div>
 
